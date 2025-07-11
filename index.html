@@ -129,7 +129,7 @@
                         <svg class="w-6 h-6 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         Done Tasks
                     </div>
-                    <button id="clearDoneTasksBtn" class="text-sm bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg shadow-sm transition duration-200 ease-in-out">
+                    <button id="clearDoneTasksBtn" class="text-sm bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg shadow-sm transition duration-300 ease-in-out">
                         Clear All
                     </button>
                 </h2>
@@ -141,8 +141,8 @@
         </div>
     </div>
 
-    <!-- Floating Action Button for Add Task -->
-    <button id="addTaskFab" class="fixed bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full w-16 h-16 flex items-center justify-center shadow-lg transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50">
+    <!-- Floating Action Button for Add Task - Reverted to bottom right with z-index -->
+    <button id="addTaskFab" class="fixed bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full w-16 h-16 flex items-center justify-center shadow-lg transition duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 z-50">
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
     </button>
 
@@ -267,11 +267,6 @@
         const modalTitle = document.getElementById('modalTitle');
         const modalMessage = document.getElementById('modalMessage');
         const messageModalButtonsDiv = document.getElementById('messageModalButtons');
-
-        // Removed taskOptionsModal related elements as they are no longer needed
-        // const taskOptionsModal = document.getElementById('taskOptionsModal');
-        // const taskOptionsEditBtn = document.getElementById('taskOptionsEditBtn');
-        // const taskOptionsDeleteBtn = document.getElementById('taskOptionsDeleteBtn');
 
         const filterTasksSelect = document.getElementById('filterTasks');
         const sortTasksSelect = document.getElementById('sortTasks');
@@ -538,7 +533,6 @@
             } else {
                 showMessage('Error', 'Task not found for editing.');
             }
-            // No need to hide taskOptionsModal here as it's removed
         }
 
         // Event listener for delete button inside the Add/Edit Task Modal
@@ -569,7 +563,6 @@
             document.getElementById('cancelDeleteBtn').onclick = () => {
                 hideModal(messageModal);
             };
-            // No need to hide taskOptionsModal here as it's removed
         }
 
         // Function to delete a task
@@ -794,12 +787,6 @@
                 currentDoingTask = JSON.parse(storedDoingTask);
             }
         }
-
-        // Removed openTaskOptions and its related event listeners as they are no longer needed
-        // function openTaskOptions(taskId, event) { ... }
-        // taskOptionsEditBtn.addEventListener('click', () => { ... });
-        // taskOptionsDeleteBtn.addEventListener('click', () => { ... });
-        // document.addEventListener('click', (event) => { ... });
 
         // Initial load and render when the page loads
         document.addEventListener('DOMContentLoaded', () => {
