@@ -171,7 +171,11 @@
                     <input type="date" id="modalTaskDeadline"
                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out shadow-sm">
                 </div>
-                <div class="flex justify-end mt-4">
+                <div class="flex justify-end mt-4 space-x-3">
+                    <button type="button" id="modalDeleteTaskBtn"
+                            class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 hidden">
+                        Delete Task
+                    </button>
                     <button type="submit"
                             class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
                         Add Task
@@ -242,6 +246,7 @@
         const modalTaskDescriptionInput = document.getElementById('modalTaskDescription');
         const modalTaskCategorySelect = document.getElementById('modalTaskCategory');
         const modalTaskDeadlineInput = document.getElementById('modalTaskDeadline');
+        const modalDeleteTaskBtn = document.getElementById('modalDeleteTaskBtn'); // New delete button in add/edit modal
 
         const morningTasksDiv = document.getElementById('morningTasks');
         const afternoonTasksDiv = document.getElementById('afternoonTasks');
@@ -256,27 +261,31 @@
         const taskProgressSlider = document.getElementById('taskProgressSlider');
         const progressValueSpan = document.getElementById('progressValue');
         const doingTaskMarkDoneBtn = document.getElementById('doingTaskMarkDoneBtn');
-        const doingTaskSaveProgressBtn = document.getElementById('doingTaskSaveProgressBtn'); // New save progress button
+        const doingTaskSaveProgressBtn = document.getElementById('doingTaskSaveProgressBtn');
 
         const messageModal = document.getElementById('messageModal');
         const modalTitle = document.getElementById('modalTitle');
         const modalMessage = document.getElementById('modalMessage');
-        const messageModalButtonsDiv = document.getElementById('messageModalButtons'); // Container for dynamic buttons
+        const messageModalButtonsDiv = document.getElementById('messageModalButtons');
 
-        const filterTasksSelect = document.getElementById('filterTasks'); // Filter dropdown
-        const sortTasksSelect = document.getElementById('sortTasks');     // Sort dropdown
-        const clearDoneTasksBtn = document.getElementById('clearDoneTasksBtn'); // Clear Done Tasks button
-        const resetAppBtn = document.getElementById('resetAppBtn'); // Reset All Data button
+        // Removed taskOptionsModal related elements as they are no longer needed
+        // const taskOptionsModal = document.getElementById('taskOptionsModal');
+        // const taskOptionsEditBtn = document.getElementById('taskOptionsEditBtn');
+        // const taskOptionsDeleteBtn = document.getElementById('taskOptionsDeleteBtn');
 
-        let currentFilter = 'all'; // 'all', 'pending', 'doing'
-        let currentSort = 'default'; // 'default', 'deadlineAsc', 'deadlineDesc', 'creationDesc', 'creationAsc'
+        const filterTasksSelect = document.getElementById('filterTasks');
+        const sortTasksSelect = document.getElementById('sortTasks');
+        const clearDoneTasksBtn = document.getElementById('clearDoneTasksBtn');
+        const resetAppBtn = document.getElementById('resetAppBtn');
+
+        let currentFilter = 'all';
+        let currentSort = 'default';
 
         // Function to show a custom message modal
         function showMessage(title, message, buttonsHtml = '<button id="closeMessageModalBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg w-full">OK</button>') {
             modalTitle.textContent = title;
             modalMessage.textContent = message;
-            messageModalButtonsDiv.innerHTML = buttonsHtml; // Set dynamic buttons
-            // Re-attach listener for the default OK button if it's present
+            messageModalButtonsDiv.innerHTML = buttonsHtml;
             const defaultOkBtn = document.getElementById('closeMessageModalBtn');
             if (defaultOkBtn) {
                 defaultOkBtn.onclick = () => hideModal(messageModal);
@@ -287,24 +296,24 @@
         // Function to show a general modal (add task, doing task)
         function showModal(modalElement) {
             modalElement.classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // Prevent body scrolling
+            document.body.style.overflow = 'hidden';
         }
 
         // Function to hide a general modal
         function hideModal(modalElement) {
             modalElement.classList.add('hidden');
-            document.body.style.overflow = ''; // Restore body scrolling
+            document.body.style.overflow = '';
         }
 
         // Event listener for opening the Add Task modal
         addTaskFab.addEventListener('click', () => {
-            // Reset modal for adding new task
             modalTaskDescriptionInput.value = '';
             modalTaskDeadlineInput.value = '';
             modalTaskCategorySelect.value = 'morning';
             document.querySelector('#addTaskModal h2').textContent = 'Add New Task';
             document.querySelector('#addTaskForm button[type="submit"]').textContent = 'Add Task';
-            delete modalAddTaskForm.dataset.editingTaskId; // Clear the editing ID
+            modalDeleteTaskBtn.classList.add('hidden'); // Hide delete button for new task
+            delete modalAddTaskForm.dataset.editingTaskId;
             showModal(addTaskModal);
         });
 
@@ -315,15 +324,12 @@
 
         // Event listener for closing the Doing Task modal (X button)
         closeDoingTaskModalBtn.addEventListener('click', () => {
-            // This just closes the modal, progress is already saved by slider input
-            // and status remains 'doing' unless explicitly saved or marked done.
             hideModal(doingTaskModal);
-            renderTasks(); // Re-render to update the main view, especially if progress changed
+            renderTasks();
         });
 
         // Function to render tasks to the UI
         function renderTasks() {
-            // Clear existing tasks
             morningTasksDiv.innerHTML = '';
             afternoonTasksDiv.innerHTML = '';
             eveningTasksDiv.innerHTML = '';
@@ -343,8 +349,8 @@
             filteredAndSortedTasks.sort((a, b) => {
                 if (currentSort === 'deadlineAsc') {
                     if (!a.deadline && !b.deadline) return 0;
-                    if (!a.deadline) return 1; // null deadline goes to end
-                    if (!b.deadline) return -1; // null deadline goes to end
+                    if (!a.deadline) return 1;
+                    if (!b.deadline) return -1;
                     return new Date(a.deadline) - new Date(b.deadline);
                 } else if (currentSort === 'deadlineDesc') {
                     if (!a.deadline && !b.deadline) return 0;
@@ -352,11 +358,11 @@
                     if (!b.deadline) return -1;
                     return new Date(b.deadline) - new Date(a.deadline);
                 } else if (currentSort === 'creationDesc') {
-                    return parseInt(b.id) - parseInt(a.id); // Assuming ID is timestamp
+                    return parseInt(b.id) - parseInt(a.id);
                 } else if (currentSort === 'creationAsc') {
                     return parseInt(a.id) - parseInt(b.id);
                 }
-                return 0; // Default: maintain original order
+                return 0;
             });
 
             // Helper to create task HTML
@@ -368,9 +374,9 @@
                 let textColorClass = '';
                 let progressHtml = '';
                 let taskItemClasses = 'p-4 shadow-sm cursor-pointer transition duration-200 ease-in-out transform hover:scale-[1.02] relative z-10';
-                let actionButtons = ''; // New variable for buttons
+                let actionButtons = '';
 
-                if (!isDoneSection) { // Apply specific styling for active tasks (rounded square boxes)
+                if (!isDoneSection) {
                     switch (task.category) {
                         case 'morning':
                             bgColorClass = 'bg-purple-100';
@@ -386,26 +392,19 @@
                             break;
                     }
                     taskItemClasses += ` ${bgColorClass} ${textColorClass} ${doingClass} rounded-xl aspect-square flex flex-col justify-between`;
-                    // Add edit and delete buttons for active tasks
+                    // 3-dot options button (now directly opens edit modal)
                     actionButtons = `
-                        <div class="absolute top-2 right-2 flex space-x-2">
-                            <button class="edit-task-btn text-gray-500 hover:text-blue-700" data-id="${task.id}" title="Edit Task">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-5.122 3.535a2 2 0 010 2.828L5.657 14.8V17h2.121l4.816-4.816a2 2 0 010-2.828L8.464 7.121z" />
-                                </svg>
-                            </button>
-                            <button class="delete-task-btn text-gray-500 hover:text-red-600" data-id="${task.id}" title="Delete Task">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm1 3a1 1 0 100 2h4a1 1 0 100-2H8z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                        </div>
+                        <button class="task-options-btn absolute top-2 right-2 text-gray-500 hover:text-gray-800" data-id="${task.id}" title="Edit/Delete Task">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4z" />
+                            </svg>
+                        </button>
                     `;
-                } else { // Styling for done tasks (simple list items)
-                    bgColorClass = 'bg-white'; // Explicitly set white background for done tasks
-                    textColorClass = 'text-gray-700'; // Default text color
+                } else {
+                    bgColorClass = 'bg-white';
+                    textColorClass = 'text-gray-700';
                     taskItemClasses = `p-4 shadow-sm ${bgColorClass} ${textColorClass} rounded-lg flex justify-between items-center`;
-                    // Add delete button for done tasks
+                    // Delete button for done tasks (remains separate)
                     actionButtons = `
                         <button class="delete-task-btn text-gray-500 hover:text-red-600 ml-4" data-id="${task.id}" title="Delete Task">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -424,7 +423,6 @@
                     `;
                 }
 
-                // Apply done styling if in the done section
                 const doneStyleClass = isDoneSection ? 'line-through text-gray-400' : '';
 
                 return `
@@ -450,10 +448,8 @@
             eveningTasks.forEach(task => eveningTasksDiv.innerHTML += createTaskHtml(task));
             doneTasks.forEach(task => doneTasksDiv.innerHTML += createTaskHtml(task, true));
 
-            // Event delegation: Attach single click listener to parent task-list divs
-            // and check if the clicked element is a task-item
+            // Event delegation for task interaction
             [morningTasksDiv, afternoonTasksDiv, eveningTasksDiv, doneTasksDiv].forEach(taskListDiv => {
-                // Remove existing listeners to prevent duplicates on re-render
                 const oldListener = taskListDiv.__eventListener;
                 if (oldListener) {
                     taskListDiv.removeEventListener('click', oldListener);
@@ -461,36 +457,34 @@
 
                 const newListener = (event) => {
                     const clickedItem = event.target.closest('.task-item');
-                    const editButton = event.target.closest('.edit-task-btn');
-                    const deleteButton = event.target.closest('.delete-task-btn');
+                    const taskOptionsBtn = event.target.closest('.task-options-btn');
+                    const deleteButton = event.target.closest('.delete-task-btn'); // For done tasks
 
-                    if (editButton) {
-                        const taskId = editButton.dataset.id;
-                        editTask(taskId);
-                        event.stopPropagation(); // Prevent task item click from triggering
+                    if (taskOptionsBtn) {
+                        const taskId = taskOptionsBtn.dataset.id;
+                        editTask(taskId); // Directly open edit modal
+                        event.stopPropagation(); // Prevent task item click
                     } else if (deleteButton) {
                         const taskId = deleteButton.dataset.id;
                         confirmDeleteTask(taskId);
-                        event.stopPropagation(); // Prevent task item click
+                        event.stopPropagation();
                     } else if (clickedItem && clickedItem.dataset.status !== 'done') {
-                        // Only open doing modal if it's not a done task and not an action button click
-                        console.log('Task item clicked via delegation! Task ID:', clickedItem.dataset.id);
                         const taskId = clickedItem.dataset.id;
                         setTaskAsDoing(taskId);
                     }
                 };
                 taskListDiv.addEventListener('click', newListener);
-                taskListDiv.__eventListener = newListener; // Store listener for removal
+                taskListDiv.__eventListener = newListener;
             });
         }
 
         // Function to add/edit a new task
         modalAddTaskForm.addEventListener('submit', (event) => {
-            event.preventDefault(); // Prevent default form submission
+            event.preventDefault();
 
             const description = modalTaskDescriptionInput.value.trim();
             const category = modalTaskCategorySelect.value;
-            const deadline = modalTaskDeadlineInput.value; // YYYY-MM-DD format
+            const deadline = modalTaskDeadlineInput.value;
             const editingTaskId = modalAddTaskForm.dataset.editingTaskId;
 
             if (!description) {
@@ -499,7 +493,6 @@
             }
 
             if (editingTaskId) {
-                // Editing an existing task
                 const taskIndex = tasks.findIndex(task => task.id === editingTaskId);
                 if (taskIndex > -1) {
                     tasks[taskIndex].description = description;
@@ -510,45 +503,52 @@
                     showMessage('Error', 'Task not found for updating.');
                 }
             } else {
-                // Adding a new task
                 const newTask = {
-                    id: Date.now().toString(), // Unique ID based on timestamp
+                    id: Date.now().toString(),
                     description: description,
                     category: category,
                     deadline: deadline,
-                    status: 'pending', // 'pending', 'doing', 'done'
-                    progress: 0 // New progress property
+                    status: 'pending',
+                    progress: 0
                 };
                 tasks.push(newTask);
                 showMessage('Success!', 'Task added successfully.');
             }
 
-            saveTasks(); // Save to local storage
-            renderTasks(); // Re-render UI
-            hideModal(addTaskModal); // Hide the add task modal
+            saveTasks();
+            renderTasks();
+            hideModal(addTaskModal);
         });
 
         // Function to handle editing a task
         function editTask(taskId) {
             const taskToEdit = tasks.find(task => task.id === taskId);
             if (taskToEdit) {
-                // Populate the add task modal with existing task data for editing
                 modalTaskDescriptionInput.value = taskToEdit.description;
                 modalTaskCategorySelect.value = taskToEdit.category;
                 modalTaskDeadlineInput.value = taskToEdit.deadline;
 
-                // Change modal title and button text for editing
                 document.querySelector('#addTaskModal h2').textContent = 'Edit Task';
                 document.querySelector('#addTaskForm button[type="submit"]').textContent = 'Save Changes';
+                modalDeleteTaskBtn.classList.remove('hidden'); // Show delete button for editing
+                modalDeleteTaskBtn.dataset.id = taskId; // Store task ID for delete button
 
-                // Store the ID of the task being edited
                 modalAddTaskForm.dataset.editingTaskId = taskId;
-
                 showModal(addTaskModal);
             } else {
                 showMessage('Error', 'Task not found for editing.');
             }
+            // No need to hide taskOptionsModal here as it's removed
         }
+
+        // Event listener for delete button inside the Add/Edit Task Modal
+        modalDeleteTaskBtn.addEventListener('click', () => {
+            const taskId = modalDeleteTaskBtn.dataset.id;
+            if (taskId) {
+                confirmDeleteTask(taskId);
+                hideModal(addTaskModal); // Close the edit modal after initiating delete
+            }
+        });
 
         // Function to confirm and delete a task
         function confirmDeleteTask(taskId) {
@@ -569,14 +569,15 @@
             document.getElementById('cancelDeleteBtn').onclick = () => {
                 hideModal(messageModal);
             };
+            // No need to hide taskOptionsModal here as it's removed
         }
 
         // Function to delete a task
         function deleteTask(taskId) {
             tasks = tasks.filter(task => task.id !== taskId);
             if (currentDoingTask && currentDoingTask.id === taskId) {
-                currentDoingTask = null; // If the deleted task was the 'doing' task
-                hideModal(doingTaskModal); // Close doing modal if it was open for this task
+                currentDoingTask = null;
+                hideModal(doingTaskModal);
             }
             saveTasks();
             renderTasks();
@@ -586,7 +587,6 @@
         // Function to set a task as "doing" and open the doing task modal
         function setTaskAsDoing(taskId) {
             console.log('Attempting to set task as doing:', taskId);
-            // If there's already a task being done, set it back to pending
             if (currentDoingTask && currentDoingTask.id !== taskId) {
                 const prevDoingTask = tasks.find(task => task.id === currentDoingTask.id);
                 if (prevDoingTask) {
@@ -597,17 +597,15 @@
                 }
             }
 
-            // Set the new task as "doing"
             const taskToSetDoing = tasks.find(task => task.id === taskId);
             if (taskToSetDoing) {
                 taskToSetDoing.status = 'doing';
                 currentDoingTask = taskToSetDoing;
-                saveTasks(); // Save the updated status
+                saveTasks();
                 console.log('New task set to doing:', taskToSetDoing.description);
 
-                // Determine background color and text color for the modal content
                 let modalBgClass = '';
-                let modalTextColorClass = ''; // New variable for text color
+                let modalTextColorClass = '';
                 switch (taskToSetDoing.category) {
                     case 'morning':
                         modalBgClass = 'bg-purple-100';
@@ -623,11 +621,9 @@
                         break;
                 }
 
-                // Remove existing background classes and add the new one
                 doingTaskModalContent.classList.remove('bg-white', 'bg-purple-100', 'bg-blue-100', 'bg-orange-100');
                 doingTaskModalContent.classList.add(modalBgClass);
 
-                // Remove existing text color classes from description and add the new one
                 doingTaskDescription.classList.forEach(cls => {
                     if (cls.startsWith('text-') && !['text-4xl', 'font-extrabold', 'mb-4'].includes(cls)) {
                         doingTaskDescription.classList.remove(cls);
@@ -635,7 +631,6 @@
                 });
                 doingTaskDescription.classList.add(modalTextColorClass);
 
-                // Populate and show the doing task modal
                 doingTaskDescription.textContent = taskToSetDoing.description;
                 doingTaskDeadline.textContent = taskToSetDoing.deadline ? `Due: ${new Date(taskToSetDoing.deadline).toLocaleDateString()}` : '';
                 taskProgressSlider.value = taskToSetDoing.progress;
@@ -653,7 +648,7 @@
                 const newProgress = parseInt(taskProgressSlider.value);
                 progressValueSpan.textContent = newProgress;
                 currentDoingTask.progress = newProgress;
-                saveTasks(); // Save progress immediately as slider moves
+                saveTasks();
             }
         });
 
@@ -663,13 +658,12 @@
                 const taskToUpdate = tasks.find(task => task.id === currentDoingTask.id);
                 if (taskToUpdate) {
                     if (taskToUpdate.status === 'doing' && taskToUpdate.progress < 100) {
-                        taskToUpdate.status = 'pending'; // Change status back to pending
+                        taskToUpdate.status = 'pending';
                     }
-                    saveTasks(); // Persist the progress change
-                    showMessage('Progress Saved!', `Progress for "${taskToUpdate.description}" saved.`);
-                    currentDoingTask = null; // Clear the 'currentDoingTask'
+                    saveTasks();
+                    currentDoingTask = null;
                     hideModal(doingTaskModal);
-                    renderTasks(); // Re-render to reflect the status change (doing to pending)
+                    renderTasks();
                 }
             } else {
                 showMessage('No Task', 'No task is currently in progress to save.');
@@ -691,11 +685,11 @@
                 const taskToMarkDone = tasks.find(task => task.id === currentDoingTask.id);
                 if (taskToMarkDone) {
                     taskToMarkDone.status = 'done';
-                    taskToMarkDone.progress = 100; // Ensure it's 100% when done
-                    currentDoingTask = null; // Clear the "doing" task
+                    taskToMarkDone.progress = 100;
+                    currentDoingTask = null;
                     saveTasks();
-                    hideModal(doingTaskModal); // Hide the doing task modal
-                    renderTasks(); // Re-render to move to done list
+                    hideModal(doingTaskModal);
+                    renderTasks();
                     showMessage('Task Completed!', `"${taskToMarkDone.description}" has been marked as done.`);
                 }
             }
@@ -796,10 +790,16 @@
             if (storedTasks) {
                 tasks = JSON.parse(storedTasks);
             }
-            if (storedDoingTask && storedDoingTask !== 'null') { // Check for 'null' string
+            if (storedDoingTask && storedDoingTask !== 'null') {
                 currentDoingTask = JSON.parse(storedDoingTask);
             }
         }
+
+        // Removed openTaskOptions and its related event listeners as they are no longer needed
+        // function openTaskOptions(taskId, event) { ... }
+        // taskOptionsEditBtn.addEventListener('click', () => { ... });
+        // taskOptionsDeleteBtn.addEventListener('click', () => { ... });
+        // document.addEventListener('click', (event) => { ... });
 
         // Initial load and render when the page loads
         document.addEventListener('DOMContentLoaded', () => {
